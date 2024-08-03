@@ -2,7 +2,7 @@ import os
 import torch
 import numpy as np
 from tqdm import tqdm
-from utils import compute_mapping, load_ply, chamfer_distance
+from utils.data_utils import compute_mapping, load_ply, chamfer_distance
 
 
 def get_clip_features(clip_dict, args):

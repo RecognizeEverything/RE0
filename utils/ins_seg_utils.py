@@ -6,7 +6,7 @@ import numpy as np
 
 from tqdm import tqdm
 from pandarallel import pandarallel
-from utils import compute_mapping, load_ply
+from utils.data_utils import compute_mapping, load_ply
 
 
 def set_pandarallel_workers(nb_workers):

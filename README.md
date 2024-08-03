@@ -28,11 +28,12 @@ git submodule add https://github.com/ScanNet/ScanNet.git submodule/ScanNet
 # prepare environment
 conda create -n re0 python=3.8.18
 conda install pytorch==1.13.0 torchvision==0.14.0 torchaudio==0.13.0 pytorch-cuda=11.7 -c pytorch -c nvidia
+pip install mypy flake8 pylint
 pip install -e submodule/detectron2
 pip install -e submodule/CLIP
 
 # Installation of Cropformer (https://github.com/qqlu/Entity/blob/main/Entityv2/CODE.md)
-cp cropformer.py submodule/detectron2/projects/CropFormer/demo_cropformer/
+mv cropformer.py submodule/detectron2/projects/CropFormer/demo_cropformer/
 cp -r submodule/Entity/Entityv2/CropFormer submodule/detectron2/projects
 make -C submodule/detectron2/projects/CropFormer/entity_api/PythonAPI
 cd submodule/detectron2/projects/CropFormer/mask2former/modeling/pixel_decoder/ops/

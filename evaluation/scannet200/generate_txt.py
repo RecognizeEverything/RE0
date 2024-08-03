@@ -24,7 +24,7 @@ from tqdm import tqdm
     ⋮
     0
 '''
-
+# 用来测试的
 
 def generate_txt(pred, args):
     '''

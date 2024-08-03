@@ -1,8 +1,8 @@
 import torch
 import pickle
-from utils import compute_mapping, load_ply
-from utils import Features
-import clip
+from utils.data_utils import compute_mapping, load_ply
+from utils.data_utils import Features
+import utils.clip_utils as clip_utils
 import os
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
@@ -10,7 +10,7 @@ from tqdm import tqdm
 import torchvision.transforms as transforms
 import numpy as np
 import shutil
-
+# clip的方法
 
 def bounding_box_cropformer(mask_data, numbers):
     '''

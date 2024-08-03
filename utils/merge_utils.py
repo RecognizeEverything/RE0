@@ -2,7 +2,7 @@ import os
 import torch
 import numpy as np
 from tqdm import tqdm
-from utils import compute_mapping, load_ply
+from utils.data_utils import compute_mapping, load_ply
 
 
 def merge_masks(point_mask_result, args):

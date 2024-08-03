@@ -1,18 +1,18 @@
 import os
 from loguru import logger
 from settings import parse_args
-from pipeline.segmentation_2d import seg_with_cropformer
-from pipeline.merge import merge_masks
-from pipeline.clip import add_clip
-from pipeline.generate_txt import generate_txt, generate_instance_txt
-from pipeline.merge_clip import merge_clip
-from pipeline.semantic_segmentation import semantic_segmentation
-from pipeline.instance_segmentation import (
+from utils.seg2d_utils import seg_with_cropformer
+from utils.merge_utils import merge_masks
+from utils.clip_utils import add_clip
+from evaluation.scannet200.generate_txt import generate_txt, generate_instance_txt
+from utils.merge_clip import merge_clip
+from utils.sem_seg_utils import semantic_segmentation
+from utils.ins_seg_utils import (
     set_pandarallel_workers,
     mask_result_mapping,
     mask_based_instance_segmantation,
 )
-from pipeline.visualization import visiualization
+from utils.vis_utils import visiualization
 
 
 def main():

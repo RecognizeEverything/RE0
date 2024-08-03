@@ -2,7 +2,7 @@ import subprocess
 import traceback
 import os
 
-
+# 出2D分割的，后续把SAM，SAM2集成到这里
 def run_script(script_path: str, script_args: list, script_type="python"):
     try:
         process = subprocess.Popen([script_type, script_path] + script_args,

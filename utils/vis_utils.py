@@ -2,11 +2,13 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import os
-
+from plyfile import PlyData, PlyElement
+import random
 """
 functions for visualization
 """
 
+# mesh
 def show_mask(mask, ax, random_color=False):
     if random_color:
         rgb = np.random.random(3)
@@ -28,24 +30,24 @@ def show_mask_ins(mask, ax, color, random_color=False):
     h, w = mask.shape[-2:]
     mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
     ax.imshow(mask_image)
-    
+
 def show_points(coords, labels, ax, marker_size=100):
     pos_points = coords[labels==1]
     neg_points = coords[labels==0]
     ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='.', s=marker_size, edgecolor='white', linewidth=1.25)
-    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='x', s=20, linewidth=1.25)   
-    
+    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='x', s=20, linewidth=1.25)
+
 def show_points_color(coords, labels, ax, rgb, marker_size=100):
     pos_points = coords[labels==1]
     neg_points = coords[labels==0]
     ax.scatter(pos_points[:, 0], pos_points[:, 1], color=rgb, marker='.', s=marker_size, edgecolor='white', linewidth=1.25)
-    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='x', s=20, linewidth=1.25) 
-    
+    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='x', s=20, linewidth=1.25)
+
 def show_box(box, ax):
     x0, y0 = box[0], box[1]
     w, h = box[2] - box[0], box[3] - box[1]
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))
-    
+
 def show_anns(anns):
     if len(anns) == 0:
         return
@@ -65,7 +67,7 @@ def show_anns(anns):
         color_point = np.concatenate([rgb, [0.95]])  # point color is deeper than mask
         show_points_color(np.array(coords), np.array([1]), ax, rgb=color_point)
     ax.imshow(img)
-    
+
 def show_anns_sem(anns):
     ax = plt.gca()
     ax.set_autoscale_on(False)
@@ -77,7 +79,7 @@ def show_anns_sem(anns):
         color_mask = np.concatenate([np.random.random(3), [0.65]])
         img[m] = color_mask
     ax.imshow(img)
-    
+
 def show_anns_ins(anns, num):
     ax = plt.gca()
     ax.set_autoscale_on(False)
@@ -89,7 +91,7 @@ def show_anns_ins(anns, num):
         color_mask = np.concatenate([np.random.random(3), [0.45]])
         img[m] = color_mask
     ax.imshow(img)
-    
+
 def cal_iou(pred, gt):
     assert pred.shape == gt.shape  # H * W
     I = np.sum(np.logical_and(pred == 1, gt == 1))
@@ -104,20 +106,20 @@ def show_iou(data_path_ins, scene_name, frame_id, ins_id, pred, image):
                    cv2.IMREAD_GRAYSCALE)  # GRAY 1 channel ndarray with shape H * W
 
     if image.shape[0] != label_ins.shape[0] or image.shape[1] != label_ins.shape[1]:
-            raise (RuntimeError("Image & label shape mismatch!"))
-        
+        raise (RuntimeError("Image & label shape mismatch!"))
+
     mask_coord = np.where(label_ins == ins_id)
     other_coord = np.where(label_ins != ins_id)
     label_ins[mask_coord] = 1
     label_ins[other_coord] = 0
-    
+
     iou = cal_iou(pred, label_ins)
-    
+
     plt.imshow(image)
     show_mask(label_ins, plt.gca())
     plt.title(f"Instance Annotation, the IoU is: {iou:.5f}", fontsize=10)
     plt.axis('off')
-    
+
     return iou
 
 def rand_cmap(nlabels, type='bright', first_color_black=False, last_color_black=False, verbose=True):
@@ -159,7 +161,7 @@ def rand_cmap(nlabels, type='bright', first_color_black=False, last_color_black=
 
         if last_color_black:
             randRGBcolors[-1] = [0, 0, 0]
-    
+
         random_colormap = LinearSegmentedColormap.from_list('new_map', randRGBcolors, N=nlabels)
 
     # Generate soft pastel colors, by limiting the RGB spectrum
@@ -196,7 +198,7 @@ def rand_cmap(nlabels, type='bright', first_color_black=False, last_color_black=
 def rand_cmap_sns(nlabels):
 
     import seaborn as sns
-    
+
     # palette = "husl"
     palette = "bright"
     randRGBcolors = sns.color_palette(palette, nlabels)
@@ -219,7 +221,7 @@ def write_ply_color_rgb(points, labels, rgb, out_filename, n_classes):
 
     for i in range(N):
         if i in ignore_idx_list:  # if ignore_idx, using original rgb value
-            c = rgb[i]  
+            c = rgb[i]
         else:  # else, using the given label rgb
             c = colors[labels[i]]
             c = [int(x * 255) for x in c]  # change rgb value from 0-1 to 0-255
@@ -231,8 +233,8 @@ def get_color_rgb(points, labels, rgb, cmap):
     labels = labels.astype(int)
     N = points.shape[0]
     colors = cmap
-    ignore_idx_list = np.where(labels==-1)[0] # list of ignore_idx
-    
+    ignore_idx_list = np.where(labels == -1)[0]  # list of ignore_idx
+
     c_all = []
     for i in range(N):
         if i in ignore_idx_list:  # if ignore_idx, using original rgb value
@@ -242,3 +244,49 @@ def get_color_rgb(points, labels, rgb, cmap):
             c = [x for x in c]
         c_all.append(np.array([c[0], c[1], c[2]]).reshape(1, 3))
     return c_all
+
+
+# ply
+
+def rand_color(seed=None):
+    if seed is not None:
+        random.seed(seed)
+
+    r = random.randint(0, 255)
+    g = random.randint(0, 255)
+    b = random.randint(0, 255)
+
+    return (r, g, b)
+
+
+def visiualization(args, segmentation):
+    data_path = os.path.join(args.project_dir, args.input_data_path, "scenes")
+    plydata = PlyData.read(
+        os.path.join(data_path, args.scene_name,
+                     f"{args.scene_name}_vh_clean_2.ply"))
+    vertex_data = plydata['vertex']
+    red = vertex_data['red']
+    green = vertex_data['green']
+    blue = vertex_data['blue']
+
+    colors = np.unique(segmentation)
+    for color in colors:
+        r, g, b = rand_color(color)
+        red[segmentation == color] = r
+        green[segmentation == color] = g
+        blue[segmentation == color] = b
+    new_vertex_data = np.array(list(
+        zip(vertex_data['x'], vertex_data['y'], vertex_data['z'], red, green,
+            blue)),
+                               dtype=[('x', 'f4'), ('y', 'f4'), ('z', 'f4'),
+                                      ('red', 'u1'), ('green', 'u1'),
+                                      ('blue', 'u1')])
+    new_vertex_element = PlyElement.describe(new_vertex_data, 'vertex')
+
+    new_plydata = PlyData([new_vertex_element], text=plydata.text)
+
+    scene_output_path = os.path.join(args.project_dir, args.output_data_path,
+                                     args.experiment_name, args.scene_name)
+    new_plydata.write(
+        os.path.join(scene_output_path,
+                     args.scene_name + '_visiualization.ply'))

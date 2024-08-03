@@ -1,9 +1,9 @@
-from utils import *
+from utils.evaluation.scannet200.scannet200_constants import *
 import numpy as np
 import os
 import torch
 import pickle
-import clip
+import utils.clip_utils as clip_utils
 
 
 def semantic_segmentation(merge_result, points_dict, args, clip_model,
@@ -13,7 +13,7 @@ def semantic_segmentation(merge_result, points_dict, args, clip_model,
     # get text feature
     text_list_features = []
     for word in CLASS_LABELS_200:
-        text_inputs = clip.tokenize(word).to(device=args.device)
+        text_inputs = clip_utils.tokenize(word).to(device=args.device)
         with torch.no_grad():
             text_feature = clip_model.encode_text(text_inputs)
         text_list_features.append(text_feature)
